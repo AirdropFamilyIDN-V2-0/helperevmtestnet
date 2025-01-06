@@ -14,6 +14,8 @@
 ```
 python helperevmtestnet.py
 python3 helperevmtestnet.py
+- Input RPC Url
+- Input Min & Max Send Amount Native & Token
 ```
   
 - For Windows 7 Install Python 3.8 [Download Here](https://www.python.org/downloads/release/python-380/) [Scrool Down]
