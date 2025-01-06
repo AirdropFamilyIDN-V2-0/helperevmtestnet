@@ -6,6 +6,16 @@
 - Auto Deploy Token
 - Auto Send Token To Random Recipient Address
 
+# How Use :
+- Make Sure Already Install Requirements Below
+- Input Privatekey On pvkeylist.txt
+- Run With Command Below
+- Data Recipient Save As datarecipeint.txt Include 0xaddr|pvkey
+```
+python helperevmtestnet.py
+python3 helperevmtestnet.py
+```
+  
 - For Windows 7 Install Python 3.8 [Download Here](https://www.python.org/downloads/release/python-380/) [Scrool Down]
 - For Windows 10 Or Higher Install Python 3.10 [Download Here](https://www.python.org/downloads/release/python-3100/) [Scrool Down] [Or Try Install From Microsoft Store]
 ```
