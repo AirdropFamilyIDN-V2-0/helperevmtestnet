@@ -194,7 +194,21 @@ def sendTX():
         while True:
             with open('pvkeylist.txt', 'r') as file:
                 local_data = file.read().splitlines()
+
+                # Check if the file is empty
+                if not local_data:
+                    print("Notice: 'pvkeylist.txt' is empty. Exiting...")
+                    sys.exit(1)  # Exit the program with a non-zero status
+
+                # Process each private key in the list
                 for pvkeylist in local_data:
+                    try:
+                        # Check if the private key is valid
+                        sender = web3.eth.account.from_key(pvkeylist)
+                    except ValueError:
+                        print(f"Notice: Invalid private key format. Exiting...")
+                        sys.exit(1)  # Exit the program with a non-zero status
+                    
                     sender = web3.eth.account.from_key(pvkeylist)
                     recipient = web3.eth.account.from_key(secrets.token_hex(32))
                     log(f'{recipient.address}|{web3.to_hex(recipient.key)}')
