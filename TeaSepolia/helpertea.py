@@ -5,10 +5,11 @@ import secrets
 import time
 
 print(f'Helper EVM Tea Sepolia Testnet By ADFMIDN Team')
-print(f'- Auto Send Native To Random Recipient Address')
+print(f'- Auto Send TEA To Random Recipient Address')
 print(f'- Auto Deploy Contract')
 print(f'- Auto Interaction Contract')
 print(f'- Auto Send Spesific Token To Random Recipient Address')
+print(f'- Auto Random Stake, Get Reward Stake, Unstake TEA')
 print(f'')
 
 web3 = Web3(Web3.HTTPProvider("https://tea-sepolia.g.alchemy.com/public"))
