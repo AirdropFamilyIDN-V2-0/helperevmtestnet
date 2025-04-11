@@ -26,6 +26,8 @@ msg_abi = json.loads('[{"inputs": [{"internalType": "string","name": "newMessage
 
 token_abi = json.loads('[{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"address","name":"spender","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Approval","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Transfer","type":"event"},{"inputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"address","name":"","type":"address"}],"name":"allowance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"_spender","type":"address"},{"internalType":"uint256","name":"_value","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"success","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"_to","type":"address"},{"internalType":"uint256","name":"_value","type":"uint256"}],"name":"transfer","outputs":[{"internalType":"bool","name":"success","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_from","type":"address"},{"internalType":"address","name":"_to","type":"address"},{"internalType":"uint256","name":"_value","type":"uint256"}],"name":"transferFrom","outputs":[{"internalType":"bool","name":"success","type":"bool"}],"stateMutability":"nonpayable","type":"function"}]')
 
+stake_abi = json.loads('[{"inputs":[],"name":"getReward","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"stake","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[{"internalType":"uint256","name":"_amount","type":"uint256"}],"name":"withdraw","outputs":[],"stateMutability":"nonpayable","type":"function"}]')
+
 def log(txt):
     f = open('dataevmteasepolia.txt', "a")
     f.write(txt + '\n')
@@ -40,6 +42,114 @@ def get_base_gas_price():
         raise ValueError("Base fee per gas not available in this block.")
 
     return base_fee_per_gas
+
+def rewardTEA(sender, key):
+    try:
+        getGasPrice = web3.from_wei(int(get_base_gas_price()), 'gwei')
+        max_priority_fee = (5*getGasPrice)/100
+        max_fee = getGasPrice + max_priority_fee
+        gasPrice = web3.to_wei(max_fee, 'gwei')
+        nonce = web3.eth.get_transaction_count(sender)
+        stake_contract = web3.eth.contract(address=web3.to_checksum_address("0x04290dacdb061c6c9a0b9735556744be49a64012"), abi=stake_abi)
+        gasAmount = stake_contract.functions.getReward().estimate_gas({
+            'chainId': chainId,
+            'from': sender,
+            'gasPrice': gasPrice,
+            'nonce': nonce
+        })
+
+        reward_tx = stake_contract.functions.getReward().build_transaction({
+            'chainId': chainId,
+            'from': sender,
+            'gasPrice': gasPrice,
+            'gas': gasAmount,
+            'nonce': nonce
+        })
+        
+        #sign & send the transaction
+        tx_hash = web3.eth.send_raw_transaction(web3.eth.account.sign_transaction(reward_tx, key).rawTransaction)
+        #get transaction hash
+        print(f'Processing Claim Reward Stake TEA ...')
+        web3.eth.wait_for_transaction_receipt(tx_hash)
+        print(f'Claim Reward Stake TEA!')
+        print(f'TX-ID : {str(web3.to_hex(tx_hash))}')
+    except Exception as e:
+        print(f'Error : {e}')
+        pass
+
+def unstakeTEA(sender, key, amount):
+    try:
+        getGasPrice = web3.from_wei(int(get_base_gas_price()), 'gwei')
+        max_priority_fee = (5*getGasPrice)/100
+        max_fee = getGasPrice + max_priority_fee
+        gasPrice = web3.to_wei(max_fee, 'gwei')
+        nonce = web3.eth.get_transaction_count(sender)
+        totalamount = web3.to_wei(amount, 'ether')
+        stake_contract = web3.eth.contract(address=web3.to_checksum_address("0x04290dacdb061c6c9a0b9735556744be49a64012"), abi=stake_abi)
+        gasAmount = stake_contract.functions.withdraw(totalamount).estimate_gas({
+            'chainId': chainId,
+            'from': sender,
+            'gasPrice': gasPrice,
+            'nonce': nonce
+        })
+
+        unstake_tx = stake_contract.functions.withdraw(totalamount).build_transaction({
+            'chainId': chainId,
+            'from': sender,
+            'gasPrice': gasPrice,
+            'gas': gasAmount,
+            'nonce': nonce
+        })
+        
+        #sign & send the transaction
+        tx_hash = web3.eth.send_raw_transaction(web3.eth.account.sign_transaction(unstake_tx, key).rawTransaction)
+        #get transaction hash
+        print(f'Processing Unstake {amount} TEA ...')
+        web3.eth.wait_for_transaction_receipt(tx_hash)
+        print(f'Unstake {amount} TEA Success!')
+        print(f'TX-ID : {str(web3.to_hex(tx_hash))}')
+    except Exception as e:
+        print(f'Error : {e}')
+        pass
+
+def stakeTEA(sender, key, amount):
+    try:
+        getGasPrice = web3.from_wei(int(get_base_gas_price()), 'gwei')
+        max_priority_fee = (5*getGasPrice)/100
+        max_fee = getGasPrice + max_priority_fee
+        gasPrice = web3.to_wei(max_fee, 'gwei')
+        nonce = web3.eth.get_transaction_count(sender)
+        totalamount = web3.to_wei(amount, 'ether')
+        stake_contract = web3.eth.contract(address=web3.to_checksum_address("0x04290dacdb061c6c9a0b9735556744be49a64012"), abi=stake_abi)
+        gasAmount = stake_contract.functions.stake().estimate_gas({
+            'chainId': chainId,
+            'from': sender,
+            'gasPrice': gasPrice,
+            'value': totalamount,
+            'nonce': nonce
+        })
+
+        stake_tx = stake_contract.functions.stake().build_transaction({
+            'chainId': chainId,
+            'from': sender,
+            'gasPrice': gasPrice,
+            'gas': gasAmount,
+            'value': totalamount,
+            'nonce': nonce
+        })
+        
+        #sign & send the transaction
+        tx_hash = web3.eth.send_raw_transaction(web3.eth.account.sign_transaction(stake_tx, key).rawTransaction)
+        #get transaction hash
+        print(f'Processing Stake {amount} TEA ...')
+        web3.eth.wait_for_transaction_receipt(tx_hash)
+        print(f'Stake {amount} TEA Success!')
+        print(f'TX-ID : {str(web3.to_hex(tx_hash))}')
+        print(f'For Claim Reward Stake TEA Wait 10 Second...')
+        time.sleep(10)
+    except Exception as e:
+        print(f'Error : {e}')
+        pass
 
 def sendToken(sender, key, ctraddr, amount, recipient):
     try:
@@ -220,6 +330,12 @@ def sendTX():
                     writeContract(sender.address, sender.key, ctraddr)
                     print(f'')
                     sendToken(sender.address, sender.key, tknaddr, amountrandom, recipient.address)
+                    print(f'')
+                    stakeTEA(sender.address, sender.key, amountrandom)
+                    print(f'')
+                    rewardTEA(sender.address, sender.key)
+                    print(f'')
+                    unstakeTEA(sender.address, sender.key, amountrandom)
                     print(f'')
     except Exception as e:
         print(f'Error : {e}')
